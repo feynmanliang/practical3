@@ -105,7 +105,7 @@ print(train.labels:max())
 print(train.labels:min())
 
 local lin_layer = nn.Linear(n_inputs, n_outputs)
-local softmax = nn.LogSoftMax() 
+local softmax = nn.LogSoftMax()
 local model = nn.Sequential()
 model:add(lin_layer)
 model:add(softmax)
@@ -123,7 +123,7 @@ local criterion = nn.ClassNLLCriterion()
 local parameters, gradParameters = model:getParameters()
 
 ------------------------------------------------------------------------
--- Define closure with mini-batches 
+-- Define closure with mini-batches
 ------------------------------------------------------------------------
 
 local counter = 0
@@ -133,14 +133,14 @@ local feval = function(x)
   end
 
   -- get start/end indices for our minibatch (in this code we'll call a minibatch a "batch")
-  --           ------- 
+  --           -------
   --          |  ...  |
   --        ^ ---------<- start index = i * batchsize + 1
   --  batch | |       |
-  --   size | | batch |       
+  --   size | | batch |
   --        v |   i   |<- end index (inclusive) = start index + batchsize
   --          ---------                         = (i + 1) * batchsize + 1
-  --          |  ...  |                 (except possibly for the last minibatch, we can't 
+  --          |  ...  |                 (except possibly for the last minibatch, we can't
   --          --------                   let that one go past the end of the data, so we take a min())
   local start_index = counter * opt.batch_size + 1
   local end_index = math.min(n_train_data, (counter + 1) * opt.batch_size + 1)
@@ -160,7 +160,7 @@ local feval = function(x)
   -- 2. compute the loss of these outputs, measured against the true labels in batch_target
   local batch_loss = criterion:forward(batch_outputs, batch_targets)
   -- 3. compute the derivative of the loss wrt the outputs of the model
-  local dloss_doutput = criterion:backward(batch_outputs, batch_targets) 
+  local dloss_doutput = criterion:backward(batch_outputs, batch_targets)
   -- 4. use gradients to update weights, we'll understand this step more next week
   model:backward(batch_inputs, dloss_doutput)
 
@@ -168,7 +168,7 @@ local feval = function(x)
   --     loss, (gradient of loss with respect to the weights that we're optimizing)
   return batch_loss, gradParameters
 end
-  
+
 ------------------------------------------------------------------------
 -- OPTIMIZE: FIRST HANDIN ITEM
 ------------------------------------------------------------------------
@@ -189,14 +189,14 @@ for i = 1, iterations do
   -- see documentation for more information on what these functions do and return:
   --   https://github.com/torch/optim
   -- it returns (new_parameters, table), where table[0] is the value of the function being optimized
-  -- and we can ignore new_parameters because `parameters` is updated in-place every time we call 
+  -- and we can ignore new_parameters because `parameters` is updated in-place every time we call
   -- the optim module's function. It uses optimState to hide away its bookkeeping that it needs to do
   -- between iterations.
   local _, minibatch_loss = optimMethod(feval, parameters, optimState)
 
   -- Our loss function is cross-entropy, divided by the number of data points,
   -- therefore the units (units in the physics sense) of the loss is "loss per data sample".
-  -- Since we evaluate the loss on a different minibatch each time, the loss will sometimes 
+  -- Since we evaluate the loss on a different minibatch each time, the loss will sometimes
   -- fluctuate upwards slightly (i.e. the loss estimate is noisy).
   if i % 10 == 0 then -- don't print *every* iteration, this is enough to get the gist
       print(string.format("minibatches processed: %6s, loss = %6.6f", i, minibatch_loss[1]))
