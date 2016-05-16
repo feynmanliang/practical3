@@ -21,9 +21,9 @@ torch.manualSeed(1)    -- fix random seed so program runs the same every time
 -- TODO: play with these optimizer options for the second handin item, as described in the writeup
 -- NOTE: see below for optimState, storing optimiser settings
 local opt = {}         -- these options are used throughout
-opt.optimization = 'sgd'
-opt.batch_size = 3
-opt.train_size = 8000  -- set to 0 or 60000 to use all 60000 training data
+opt.optimization = 'adagrad'
+opt.batch_size = 1000
+opt.train_size = 60000  -- set to 0 or 60000 to use all 60000 training data
 opt.test_size = 0      -- 0 means load all data
 opt.epochs = 2         -- **approximate** number of passes through the training data (see below for the `iterations` variable, which is calculated from this)
 
@@ -33,7 +33,7 @@ local optimMethod      -- stores a function corresponding to the optimization ro
 -- remember, the defaults below are not necessarily good
 if opt.optimization == 'lbfgs' then
   optimState = {
-    learningRate = 1e-1,
+    learningRate = 1e-4,
     maxIter = 2,
     nCorrection = 10
   }
@@ -173,6 +173,7 @@ end
 -- OPTIMIZE: FIRST HANDIN ITEM
 ------------------------------------------------------------------------
 local losses = {}          -- training losses for each iteration/minibatch
+local testLosses = {}      -- test losses for each iteration/minibatch
 local epochs = opt.epochs  -- number of full passes over all the training data
 local iterations = epochs * math.ceil(n_train_data / opt.batch_size) -- integer number of minibatches to process
 -- (note: number of training data might not be divisible by the batch size, so we round up)
@@ -207,17 +208,30 @@ for i = 1, iterations do
   -- Tensor{1,2,...,#losses}. HINT: look up the torch.linspace function, and note that torch.range(1, #losses)
   -- is the same as torch.linspace(1, #losses, #losses).
 
-  losses[#losses + 1] = minibatch_loss[1] -- append the new loss
+  if i % 10 == 0 then
+    losses[#losses + 1] = minibatch_loss[1] -- append the new loss
+    testLosses[#testLosses + 1] = criterion:forward(model:forward(test.data), test.labels)
+  end
 end
 
 -- TODO: for the first handin item, evaluate test loss above, and add to the plot below
 --       see TIP/HINT above if you want to make the optimization loop faster
 
 -- Turn table of losses into a torch Tensor, and plot it
+gnuplot.epsfigure('output.eps')
 gnuplot.plot({
-  torch.range(1, #losses),        -- x-coordinates for data to plot, creates a tensor holding {1,2,3,...,#losses}
-  torch.Tensor(losses),           -- y-coordinates (the training losses)
+  'train',
+  10*torch.range(1, #losses),-- x-coordinates for data to plot, creates a tensor holding {1,2,3,...,#losses}
+  torch.Tensor(losses),                   -- y-coordinates (the training losses)
+  '-'},
+  {
+  'test',
+  10*torch.range(1, #testLosses),
+  torch.Tensor(testLosses),
   '-'})
+gnuplot.xlabel('minibatch')
+gnuplot.ylabel('loss')
+gnuplot.plotflush()
 
 ------------------------------------------------------------------------------
 -- TESTING THE LEARNED MODEL: 2ND HANDIN ITEM
@@ -229,4 +243,4 @@ local _, classPredictions = torch.max(classProbabilities, 2)
 -- classPredictions holds predicted classes from 1-10
 
 -- TODO: compute test classification error here for the second handin item
-
+print("test accuracy = %6.6f", torch.eq(classPredictions:byte(), test.labels):sum() / test.labels:size(1))

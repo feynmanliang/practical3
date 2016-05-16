@@ -76,7 +76,7 @@ function mnist.loadDataset(fileName, maxLoad)
 			     local label = labelvector:zero()
 			     label[class] = 1
 			     local example = {input, label}
-                                       return example
+                 return example
    end})
 
    return dataset
