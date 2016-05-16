@@ -243,4 +243,4 @@ local _, classPredictions = torch.max(classProbabilities, 2)
 -- classPredictions holds predicted classes from 1-10
 
 -- TODO: compute test classification error here for the second handin item
-print("test accuracy = %6.6f", torch.eq(classPredictions:byte(), test.labels):sum() / test.labels:size(1))
+print(string.format("test accuracy = %6.6f", torch.eq(classPredictions:byte(), test.labels):sum() / test.labels:size(1)))
